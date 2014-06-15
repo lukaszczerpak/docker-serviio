@@ -11,9 +11,13 @@ Building and running the container image
 ----------------------------
 
 1. Clone this repo and cd into the cloned directory
+
 2. Run the following docker command to build the image:
+
 	docker build -t hedgehog.ninja/serviio .
+
 3. When the image is built start up the image with the following command replacing '/home/user/mediaFiles' with the path to where you media files reside
+
 	docker run -d -p 23423:23423 -p 8895:8895 -p 1900:1900 -v /home/user/mediaFiles:/mediafiles hedgehog.ninja/serviio
 
 Note:
