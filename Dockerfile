@@ -38,7 +38,7 @@ RUN tar -zxvf /tmp/serviio-latest.tar.gz -C /serviio
 # rename the current version folder to serviio
 RUN ls /serviio/ | xargs echo "/serviio/" | sed 's/ //' | xargs -I {} mv {} "/serviio/serviio" 
 
-# attempt to 
+# attempt to perform initial serviio configuration
 RUN /serviio/serviio/bin/serviio.sh & echo "Waiting 1 minute for serviio to do it's first run configuration, then attempt to set sharedFolder to /mediafiles..." && sleep 60 && curl --include --request PUT --header "Content-Type: application/xml" --header "Accept: application/xml | application/json" --data-binary '<repository><sharedFolders><sharedFolder><folderPath>/mediafiles</folderPath><supportedFileTypes><fileType>AUDIO</fileType><fileType>IMAGE</fileType><fileType>VIDEO</fileType></supportedFileTypes><descriptiveMetadataSupported>false</descriptiveMetadataSupported><scanForUpdates>true</scanForUpdates><accessGroupIds><id>1</id></accessGroupIds></sharedFolder></sharedFolders> <searchHiddenFiles>false</searchHiddenFiles><searchForUpdates>true</searchForUpdates><automaticLibraryUpdate>true</automaticLibraryUpdate><automaticLibraryUpdateInterval>5</automaticLibraryUpdateInterval><onlineRepositories></onlineRepositories><maxNumberOfItemsForOnlineFeeds>10</maxNumberOfItemsForOnlineFeeds><onlineFeedExpiryInterval>24</onlineFeedExpiryInterval><onlineContentPreferredQuality>LOW</onlineContentPreferredQuality></repository>' http://localhost:23423/rest/repository && sleep 2
 
 # launch serviio
