@@ -16,7 +16,7 @@ Run the following docker command to build the image:
 
 	docker build -t hedgehog.ninja/serviio .
 
-When the image is built start up the image with the following command replacing **'/home/user/mediaFiles'** with the path where you media files reside:
+When the image is built start up the image with the following command replacing **'/home/user/mediaFiles'** with the path where your media files reside:
 
 	docker run -d -p 23423:23423 -p 8895:8895 -p 1900:1900 -v /home/user/mediaFiles:/mediafiles hedgehog.ninja/serviio
 
