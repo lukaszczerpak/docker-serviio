@@ -29,8 +29,9 @@ The docker file exposes all the correct ports, as required for serviio, however 
 In the meantime, you can run the container with --net=host (requires docker version 0.11.0) but read the next excerpt from the docker commandline help 
 
 -----------------------------------------
-> --net=host
-> Use the host network stack inside the container.  Note: the host mode gives the container full access to local system services such as D-bus and is therefore considered insecure.
+>	--net=host  : Use the host network stack inside the container.  
+>	Note: the host mode gives the container full access to local system services such as D-bus and is therefore considered insecure.
+
 -----------------------------------------
 
 
