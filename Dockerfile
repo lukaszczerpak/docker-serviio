@@ -3,45 +3,55 @@
 # 	devices (e.g. a TV set, Bluray player, games console or mobile phone) on your connected home network.
 # 	For more information see http://serviio.org/ 
 
-FROM ubuntu:latest
-MAINTAINER hedgehog.ninja
+FROM ubuntu:14.04
+MAINTAINER lukasz.czerpak
 
 ENV HOME /root
 ENV DEBIAN_FRONTEND noninteractive
+# To get rid of error messages like "debconf: unable to initialize frontend: Dialog":
+#RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
+# locale
+RUN locale-gen en_US.UTF-8  
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8  
+
+VOLUME /opt/serviio/log
+VOLUME /opt/serviio/library
+VOLUME /tmp
+
+# extra repository for oracle java 8
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
+RUN apt-get -q update
+
+# auto accept oracle jdk license
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 seen true | /usr/bin/debconf-set-selections
+
+# upgrade and install packages
+RUN apt-get -qy --force-yes dist-upgrade
+RUN apt-get install -qy --force-yes ca-certificates curl wget dcraw libmp3lame0 librtmp0 libx264-142 libass4 libav-tools oracle-java8-installer
+
+# apt clean
+RUN apt-get clean
+
+# get a copy of the current download page, extract the download link from it and uncompress to /opt/serviio directory
+RUN mkdir -p /opt/serviio
+RUN wget --quiet -O - http://serviio.org/download | grep -oEm 1 "<a href=\".*(linux.tar.gz)\"" | cut -d\" -f2 | xargs wget --quiet -O - | tar -zxvf - -C /opt/serviio --strip 1
+
+# link ffmpeg to the new avconv
+RUN ln -s /usr/bin/avconv /usr/bin/ffmpeg
+RUN sed -i 's/-Dffmpeg.location=ffmpeg -Ddcraw.location=dcraw/-Dffmpeg.location=\/usr\/bin\/ffmpeg -Ddcraw.location=\/usr\/bin\/dcraw/g' /opt/serviio/bin/serviio.sh
+
+# attempt to perform initial serviio configuration
+RUN /opt/serviio/bin/serviio.sh & echo "Waiting 1 minute for serviio to do it's first run configuration, then attempt to set default password..." && sleep 60 && curl --include --request PUT --header "Content-Type: application/xml" --header "Accept: application/xml | application/json" --data-binary '<remoteAccess><remoteUserPassword>serviio123</remoteUserPassword><preferredRemoteDeliveryQuality>MEDIUM</preferredRemoteDeliveryQuality><portMappingEnabled>false</portMappingEnabled></remoteAccess>' http://localhost:23423/rest/remote-access && sleep 2
 
 # serviio requires TCP port 8895 and UDP 1900 for content and 23423 for rest api
 EXPOSE 23423:23423/tcp 8895:8895/tcp 1900:1900/udp
 
-# the folder 
-VOLUME ["/mediafiles"]
-
-# required packages
-RUN apt-get -y update
-RUN apt-get -y upgrade
-RUN apt-get -y install curl wget libav-tools
-RUN apt-get -y --no-install-recommends install default-jre
-
-#link ffmpeg to the new avconv
-RUN ln -s /usr/bin/avconv /usr/bin/ffmpeg
-
-# get a copy of the current download page
-RUN wget --output-document=/tmp/download.html http://serviio.org/download
-# extract the download link from it for the linux.tar.gz and download to /tmp/serviio-latest.tar.gz 
-RUN grep -oEm 1 "<a href=\".*(linux.tar.gz)\"" /tmp/download.html | cut -d\" -f2 | xargs wget --output-document=/tmp/serviio-latest.tar.gz
-
-
-# create /serviio
-RUN mkdir /serviio
-# extract to the serviio dir & rename
-RUN tar -zxvf /tmp/serviio-latest.tar.gz -C /serviio
-# rename the current version folder to serviio
-RUN ls /serviio/ | xargs echo "/serviio/" | sed 's/ //' | xargs -I {} mv {} "/serviio/serviio" 
-
-# attempt to perform initial serviio configuration
-RUN /serviio/serviio/bin/serviio.sh & echo "Waiting 1 minute for serviio to do it's first run configuration, then attempt to set sharedFolder to /mediafiles..." && sleep 60 && curl --include --request PUT --header "Content-Type: application/xml" --header "Accept: application/xml | application/json" --data-binary '<repository><sharedFolders><sharedFolder><folderPath>/mediafiles</folderPath><supportedFileTypes><fileType>AUDIO</fileType><fileType>IMAGE</fileType><fileType>VIDEO</fileType></supportedFileTypes><descriptiveMetadataSupported>false</descriptiveMetadataSupported><scanForUpdates>true</scanForUpdates><accessGroupIds><id>1</id></accessGroupIds></sharedFolder></sharedFolders> <searchHiddenFiles>false</searchHiddenFiles><searchForUpdates>true</searchForUpdates><automaticLibraryUpdate>true</automaticLibraryUpdate><automaticLibraryUpdateInterval>5</automaticLibraryUpdateInterval><onlineRepositories></onlineRepositories><maxNumberOfItemsForOnlineFeeds>10</maxNumberOfItemsForOnlineFeeds><onlineFeedExpiryInterval>24</onlineFeedExpiryInterval><onlineContentPreferredQuality>LOW</onlineContentPreferredQuality></repository>' http://localhost:23423/rest/repository && sleep 2
-
 # launch serviio
-WORKDIR /serviio/serviio
-CMD /serviio/serviio/bin/serviio.sh
-
+WORKDIR /opt/serviio
+CMD /opt/serviio/bin/serviio.sh

@@ -6,6 +6,8 @@ A docker.io container for Serviio Media Server (http://serviio.org/)
 Serviio Media Server is a free DLNA/UPNP compliant media server written in Java by Petr Nejedly.  
 If you like Serviio please support it and consider buying a license for the pro features.
 
+It's contribution to excellent HedgehogNinja's work (https://github.com/HedgehogNinja/docker-serviio). This version supports Serviio 1.5 which requires Java 8 to work. 
+
 
 Building and running the container image
 ----------------------------------------
@@ -14,11 +16,11 @@ Clone this repo and cd into the cloned directory
 
 Run the following docker command to build the image:
 
-	docker build -t hedgehog.ninja/serviio .
+	docker build -t lukasz.czerpak/serviio .
 
 When the image is built start up the image with the following command replacing **'/home/user/mediaFiles'** with the path where your media files reside:
 
-	docker run -d --net=host -v /home/user/mediaFiles:/mediafiles hedgehog.ninja/serviio
+	docker run -d --net=host -v /tmp:/tmp -v /home/user/serviio/log:/opt/serviio/log -v /home/user/serviio/library:/opt/serviio/library -v /home/user/store:/store --name serviio lukasz.czerpak/serviio
 
 
 Notes
@@ -34,13 +36,13 @@ In the meantime, you can run the container with --net=host (requires docker vers
 
 -----------------------------------------
 
-
-
+/tmp mapping allows Serviio to use external volume for temporary transcoding files which 
+/opt/serviio/log and /opt/serviio/library mappings keep logs and your library outside of the container so you will not lose your settings on docker-serviio upgrades.
+/store mapping is just an example as default Serviio configuration doesn't contain any folders.
 
 Serviio does take a few minutes to start up when first run.
 
-The container as default will use a volume mapped to /mediafiles as the location for media and will search it for video, images and music.
+Once you get Serviio up and running inside Docker container, you should use Serviio Console or fantastic webui (https://github.com/SwoopX/Web-UI-for-Serviio) to set up folders and some internal parameters.
 
-You can use serviio's client tools, serviio-console.sh is shipped with serviio or serviidroid (on android) to change the search paths etc.
-
+Installation script sets remote password to 'serviio123'.
 
