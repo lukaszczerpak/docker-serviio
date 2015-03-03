@@ -18,7 +18,7 @@ Run the following docker command to build the image:
 
 	docker build -t lukasz.czerpak/serviio .
 
-When the image is built start up the image with the following command replacing **'/home/user/mediaFiles'** with the path where your media files reside:
+When the image is built start up the image with the following command replacing directories with corresponding the paths on your system:
 
 	docker run -d --net=host -v /tmp:/tmp -v /home/user/serviio/log:/opt/serviio/log -v /home/user/serviio/library:/opt/serviio/library -v /home/user/store:/store --name serviio lukasz.czerpak/serviio
 
